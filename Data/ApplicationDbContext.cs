@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace OpenBooksBackMobile.Data
 {
-    public class ApplicationDbContext: IdentityDbContext<Usuario,Rol, int>
+    public class ApplicationDbContext : IdentityDbContext<Usuario>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -39,6 +39,19 @@ namespace OpenBooksBackMobile.Data
                 .WithMany()
                 .HasForeignKey(l => l.UsuarioCreadorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LibroCategoria>()
+                .HasKey(lc => new { lc.LibroId, lc.CategoriaId });
+
+            modelBuilder.Entity<LibroCategoria>()
+                .HasOne(lc => lc.Libro)
+                .WithMany(l => l.LibroCategorias)
+                .HasForeignKey(lc => lc.LibroId);
+
+            modelBuilder.Entity<LibroCategoria>()
+                .HasOne(lc => lc.Categoria)
+                .WithMany(c => c.LibroCategorias)
+                .HasForeignKey(lc => lc.CategoriaId);
         }
     }
 }

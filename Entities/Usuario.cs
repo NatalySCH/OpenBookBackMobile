@@ -2,7 +2,7 @@
 
 namespace OpenBooksBackMobile.Entities
 {
-    public class Usuario : IdentityUser<int>
+    public class Usuario : IdentityUser
     {
         public bool Estado { get; set; } = true;
         public bool Sancionado { get; set; } = false;
