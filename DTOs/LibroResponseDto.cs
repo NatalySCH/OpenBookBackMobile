@@ -16,5 +16,6 @@
         public DateTime FechaCreacion { get; set; }
 
         public string? UsuarioCreadorId { get; set; }
+        public List<string>? Categorias { get; set; } = new();
     }
 }

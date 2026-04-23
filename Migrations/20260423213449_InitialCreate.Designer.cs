@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OpenBooksBackMobile.Data;
@@ -11,9 +12,11 @@ using OpenBooksBackMobile.Data;
 namespace OpenBooksBackMobile.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260423213449_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -236,72 +239,6 @@ namespace OpenBooksBackMobile.Migrations
                     b.ToTable("LibroCategorias");
                 });
 
-            modelBuilder.Entity("OpenBooksBackMobile.Entities.Marcador", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Fecha")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("LibroId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Pagina")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UsuarioId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LibroId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Marcadores");
-                });
-
-            modelBuilder.Entity("OpenBooksBackMobile.Entities.Resaltador", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CfiRange")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Href")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("LibroId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("UsuarioId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LibroId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Resaltadores");
-                });
-
             modelBuilder.Entity("OpenBooksBackMobile.Entities.Usuario", b =>
                 {
                     b.Property<string>("Id")
@@ -507,44 +444,6 @@ namespace OpenBooksBackMobile.Migrations
                     b.Navigation("Categoria");
 
                     b.Navigation("Libro");
-                });
-
-            modelBuilder.Entity("OpenBooksBackMobile.Entities.Marcador", b =>
-                {
-                    b.HasOne("OpenBooksBackMobile.Entities.Libro", "Libro")
-                        .WithMany()
-                        .HasForeignKey("LibroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OpenBooksBackMobile.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Libro");
-
-                    b.Navigation("Usuario");
-                });
-
-            modelBuilder.Entity("OpenBooksBackMobile.Entities.Resaltador", b =>
-                {
-                    b.HasOne("OpenBooksBackMobile.Entities.Libro", "Libro")
-                        .WithMany()
-                        .HasForeignKey("LibroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("OpenBooksBackMobile.Entities.Usuario", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Libro");
-
-                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.UsuarioLibro", b =>

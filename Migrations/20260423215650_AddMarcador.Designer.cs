@@ -12,8 +12,8 @@ using OpenBooksBackMobile.Data;
 namespace OpenBooksBackMobile.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260423205734_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260423215650_AddMarcador")]
+    partial class AddMarcador
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -171,7 +171,7 @@ namespace OpenBooksBackMobile.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categoria");
+                    b.ToTable("Categorias");
                 });
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.Libro", b =>
@@ -190,7 +190,7 @@ namespace OpenBooksBackMobile.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("CategoriaId")
+                    b.Property<int?>("CategoriaId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Descripcion")
@@ -236,7 +236,37 @@ namespace OpenBooksBackMobile.Migrations
 
                     b.HasIndex("CategoriaId");
 
-                    b.ToTable("LibroCategoria");
+                    b.ToTable("LibroCategorias");
+                });
+
+            modelBuilder.Entity("OpenBooksBackMobile.Entities.Marcador", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LibroId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Pagina")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LibroId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Marcadores");
                 });
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.Usuario", b =>
@@ -415,18 +445,14 @@ namespace OpenBooksBackMobile.Migrations
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.Libro", b =>
                 {
-                    b.HasOne("OpenBooksBackMobile.Entities.Categoria", "Categoria")
+                    b.HasOne("OpenBooksBackMobile.Entities.Categoria", null)
                         .WithMany("Libros")
-                        .HasForeignKey("CategoriaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("CategoriaId");
 
                     b.HasOne("OpenBooksBackMobile.Entities.Usuario", "UsuarioCreador")
                         .WithMany()
                         .HasForeignKey("UsuarioCreadorId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Categoria");
 
                     b.Navigation("UsuarioCreador");
                 });
@@ -448,6 +474,25 @@ namespace OpenBooksBackMobile.Migrations
                     b.Navigation("Categoria");
 
                     b.Navigation("Libro");
+                });
+
+            modelBuilder.Entity("OpenBooksBackMobile.Entities.Marcador", b =>
+                {
+                    b.HasOne("OpenBooksBackMobile.Entities.Libro", "Libro")
+                        .WithMany()
+                        .HasForeignKey("LibroId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("OpenBooksBackMobile.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Libro");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.UsuarioLibro", b =>

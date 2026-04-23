@@ -9,6 +9,8 @@
         public string ArchivoUrl { get; set; }
         public string? PortadaUrl { get; set; }
 
+        public List<int>? CategoriaIds { get; set; }
+
         public bool EsPublico { get; set; } = false;
     }
 }

@@ -9,6 +9,7 @@ using OpenBooksBackMobile.Services.Auth;
 using OpenBooksBackMobile.Entities;
 using OpenBooksBackMobile.Services;
 using OpenBooksBackMobile.Services.Interfaces;
+using OpenBooksBackMobile.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,10 +86,14 @@ builder.Services.AddAuthentication(options =>
 //Services
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<LibroService>();
 builder.Services.AddScoped<IEpubService, EpubService>();
 builder.Services.AddScoped<UsuarioLibroService>();
+builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<ResaltadorService>();
+builder.Services.AddScoped<MarcadorService>();
 builder.Services.AddScoped<IPdfToEpubConverter, PdfToEpubConverter>();
 
 
@@ -114,6 +119,15 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+}
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var userManager = services.GetRequiredService<UserManager<Usuario>>();
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+    await DbSeeder.SeedAdminAsync(userManager, roleManager);
 }
 app.UseStaticFiles();
 app.UseHttpsRedirection();

@@ -16,9 +16,6 @@
         public string? UsuarioCreadorId { get; set; }
         public Usuario? UsuarioCreador { get; set; }
 
-        public int CategoriaId { get; set; }
-        public Categoria Categoria { get; set; }
-
         public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
 
         public ICollection<UsuarioLibro> Usuarios { get; set; } = new List<UsuarioLibro>();

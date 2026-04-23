@@ -22,6 +22,8 @@ public class LibroService
     {
         return await _context.Libros
             .Where(l => l.EsPublico)
+            .Include(l => l.LibroCategorias)
+                .ThenInclude(lc => lc.Categoria)
             .Select(l => new LibroResponseDto
             {
                 Id = l.Id,
@@ -29,7 +31,14 @@ public class LibroService
                 Autor = l.Autor,
                 Descripcion = l.Descripcion,
                 ArchivoUrl = l.ArchivoUrl,
-                PortadaUrl = l.PortadaUrl
+                PortadaUrl = l.PortadaUrl,
+                EsPublico = l.EsPublico,
+                FechaCreacion = l.FechaCreacion,
+                UsuarioCreadorId = l.UsuarioCreadorId,
+
+                Categorias = l.LibroCategorias
+                    .Select(lc => lc.Categoria.Nombre)
+                    .ToList()
             })
             .ToListAsync();
     }
@@ -73,7 +82,7 @@ public class LibroService
     }
 
     // 🔹 Crear libro
-    public async Task<Libro> CreateAsync(LibroCreateDto dto, string usuarioId)
+    public async Task<LibroResponseDto> CreateAsync(LibroCreateDto dto, string usuarioId)
     {
         if (string.IsNullOrEmpty(dto.ArchivoUrl))
             throw new Exception("Archivo requerido");
@@ -117,10 +126,29 @@ public class LibroService
             throw new Exception("Formato no soportado");
         }
 
+        if (dto.CategoriaIds != null && dto.CategoriaIds.Any())
+        {
+            foreach (var catId in dto.CategoriaIds)
+            {
+                libro.LibroCategorias.Add(new LibroCategoria
+                {
+                    CategoriaId = catId
+                });
+            }
+        }
+
         _context.Libros.Add(libro);
         await _context.SaveChangesAsync();
 
-        return libro;
+        return new LibroResponseDto
+        {
+            Id = libro.Id,
+            Titulo = libro.Titulo,
+            Autor = libro.Autor,
+            Descripcion = libro.Descripcion,
+            ArchivoUrl = libro.ArchivoUrl,
+            PortadaUrl = libro.PortadaUrl
+        };
     }
 
     public async Task<(IEnumerable<LibroResponseDto>, int)> GetPagedAsync(
@@ -165,5 +193,27 @@ public class LibroService
         return (libros, total);
     }
 
+
+    public async Task AssignCategoriasAsync(int libroId, List<int> categoriaIds)
+    {
+        var libro = await _context.Libros
+            .Include(l => l.LibroCategorias)
+            .FirstOrDefaultAsync(l => l.Id == libroId);
+
+        if (libro == null)
+            throw new Exception("Libro no encontrado");
+
+        _context.LibroCategorias.RemoveRange(libro.LibroCategorias);
+
+        libro.LibroCategorias = categoriaIds
+            .Select(id => new LibroCategoria
+            {
+                LibroId = libroId,
+                CategoriaId = id
+            })
+            .ToList();
+
+        await _context.SaveChangesAsync();
+    }
 
 }

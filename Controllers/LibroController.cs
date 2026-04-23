@@ -10,11 +10,13 @@ using System.Security.Claims;
 public class LibroController : ControllerBase
 {
     private readonly LibroService _libroService;
+    private readonly CategoriaService _categoriaService;
     private readonly ApplicationDbContext _context;
 
-    public LibroController(LibroService libroService, ApplicationDbContext context)
+    public LibroController(LibroService libroService, CategoriaService categoriaService,ApplicationDbContext context)
     {
         _libroService = libroService;
+        _categoriaService = categoriaService;
         _context = context;
     }
 
@@ -61,7 +63,15 @@ public class LibroController : ControllerBase
 
         var libro = await _libroService.CreateAsync(dto, userId);
 
-        return Ok(libro);
+        return Ok(new LibroResponseDto
+        {
+            Id = libro.Id,
+            Titulo = libro.Titulo,
+            Autor = libro.Autor,
+            Descripcion = libro.Descripcion,
+            ArchivoUrl = libro.ArchivoUrl,
+            PortadaUrl = libro.PortadaUrl
+        });
     }
 
     [HttpGet("paged")]
@@ -100,5 +110,24 @@ public class LibroController : ControllerBase
         var bytes = await System.IO.File.ReadAllBytesAsync(ruta);
 
         return File(bytes, "application/epub+zip", $"{libro.Titulo}.epub");
+    }
+
+    [Authorize]
+    [HttpPost("{id}/categorias")]
+    public async Task<IActionResult> AsignarCategorias(int id, [FromBody] List<int> categoriasIds)
+    {
+        await _libroService.AssignCategoriasAsync(id, categoriasIds);
+        return Ok();
+    }
+
+    [HttpGet("{id}/libros")]
+    public async Task<IActionResult> GetLibrosByCategoria(int id)
+    {
+        var categoria = await _categoriaService.GetByIdWithBooksAsync(id);
+
+        if (categoria == null)
+            return NotFound();
+
+        return Ok(categoria);
     }
 }

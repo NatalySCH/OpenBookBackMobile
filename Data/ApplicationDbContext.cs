@@ -13,6 +13,10 @@ namespace OpenBooksBackMobile.Data
 
         public DbSet<Libro> Libros { get; set; }
         public DbSet<UsuarioLibro> UsuarioLibros { get; set; }
+        public DbSet<Categoria> Categorias { get; set; }
+        public DbSet<LibroCategoria> LibroCategorias { get; set; }
+        public DbSet<Marcador> Marcadores { get; set; }
+        public DbSet<Resaltador> Resaltadores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +56,28 @@ namespace OpenBooksBackMobile.Data
                 .HasOne(lc => lc.Categoria)
                 .WithMany(c => c.LibroCategorias)
                 .HasForeignKey(lc => lc.CategoriaId);
+
+            modelBuilder.Entity<Marcador>()
+                .HasOne(m => m.Usuario)
+                .WithMany()
+                .HasForeignKey(m => m.UsuarioId);
+
+            modelBuilder.Entity<Marcador>()
+                .HasOne(m => m.Libro)
+                .WithMany()
+                .HasForeignKey(m => m.LibroId);
+
+            modelBuilder.Entity<Resaltador>()
+                .HasOne(r => r.Usuario)
+                .WithMany()
+                .HasForeignKey(r => r.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Resaltador>()
+                .HasOne(r => r.Libro)
+                .WithMany()
+                .HasForeignKey(r => r.LibroId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -57,7 +57,7 @@ namespace OpenBooksBackMobile.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Categoria",
+                name: "Categorias",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -66,7 +66,7 @@ namespace OpenBooksBackMobile.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Categoria", x => x.Id);
+                    table.PrimaryKey("PK_Categorias", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -189,8 +189,8 @@ namespace OpenBooksBackMobile.Migrations
                     ArchivoUrl = table.Column<string>(type: "text", nullable: false),
                     EsPublico = table.Column<bool>(type: "boolean", nullable: false),
                     UsuarioCreadorId = table.Column<string>(type: "text", nullable: true),
-                    CategoriaId = table.Column<int>(type: "integer", nullable: false),
-                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    FechaCreacion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CategoriaId = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -202,15 +202,14 @@ namespace OpenBooksBackMobile.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Libros_Categoria_CategoriaId",
+                        name: "FK_Libros_Categorias_CategoriaId",
                         column: x => x.CategoriaId,
-                        principalTable: "Categoria",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalTable: "Categorias",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "LibroCategoria",
+                name: "LibroCategorias",
                 columns: table => new
                 {
                     LibroId = table.Column<int>(type: "integer", nullable: false),
@@ -218,15 +217,15 @@ namespace OpenBooksBackMobile.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LibroCategoria", x => new { x.LibroId, x.CategoriaId });
+                    table.PrimaryKey("PK_LibroCategorias", x => new { x.LibroId, x.CategoriaId });
                     table.ForeignKey(
-                        name: "FK_LibroCategoria_Categoria_CategoriaId",
+                        name: "FK_LibroCategorias_Categorias_CategoriaId",
                         column: x => x.CategoriaId,
-                        principalTable: "Categoria",
+                        principalTable: "Categorias",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_LibroCategoria_Libros_LibroId",
+                        name: "FK_LibroCategorias_Libros_LibroId",
                         column: x => x.LibroId,
                         principalTable: "Libros",
                         principalColumn: "Id",
@@ -303,8 +302,8 @@ namespace OpenBooksBackMobile.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_LibroCategoria_CategoriaId",
-                table: "LibroCategoria",
+                name: "IX_LibroCategorias_CategoriaId",
+                table: "LibroCategorias",
                 column: "CategoriaId");
 
             migrationBuilder.CreateIndex(
@@ -348,7 +347,7 @@ namespace OpenBooksBackMobile.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "LibroCategoria");
+                name: "LibroCategorias");
 
             migrationBuilder.DropTable(
                 name: "UsuarioLibros");
@@ -363,7 +362,7 @@ namespace OpenBooksBackMobile.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Categoria");
+                name: "Categorias");
         }
     }
 }
