@@ -63,15 +63,7 @@ public class LibroController : ControllerBase
 
         var libro = await _libroService.CreateAsync(dto, userId);
 
-        return Ok(new LibroResponseDto
-        {
-            Id = libro.Id,
-            Titulo = libro.Titulo,
-            Autor = libro.Autor,
-            Descripcion = libro.Descripcion,
-            ArchivoUrl = libro.ArchivoUrl,
-            PortadaUrl = libro.PortadaUrl
-        });
+        return Ok(libro);
     }
 
     [HttpGet("paged")]

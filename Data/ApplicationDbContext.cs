@@ -17,6 +17,7 @@ namespace OpenBooksBackMobile.Data
         public DbSet<LibroCategoria> LibroCategorias { get; set; }
         public DbSet<Marcador> Marcadores { get; set; }
         public DbSet<Resaltador> Resaltadores { get; set; }
+        public DbSet<Valoracion> Valoraciones { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -78,6 +79,32 @@ namespace OpenBooksBackMobile.Data
                 .WithMany()
                 .HasForeignKey(r => r.LibroId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Valoracion>(entity =>
+            {
+                entity.ToTable("Valoraciones");
+                entity.HasKey(v => v.Id);
+
+                entity.Property(v => v.Puntuacion)
+                    .IsRequired();
+
+                entity.Property(v => v.Fecha)
+                    .IsRequired();
+
+                entity.HasOne(v => v.Usuario)
+                    .WithMany()
+                    .HasForeignKey(v => v.UsuarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(v => v.Libro)
+                    .WithMany(l => l.Valoraciones)
+                    .HasForeignKey(v => v.LibroId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // 🚨 Regla importante: un usuario solo puede valorar un libro una vez
+                entity.HasIndex(v => new { v.UsuarioId, v.LibroId })
+                    .IsUnique();
+            });
         }
     }
 }

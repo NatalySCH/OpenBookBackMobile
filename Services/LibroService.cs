@@ -24,22 +24,8 @@ public class LibroService
             .Where(l => l.EsPublico)
             .Include(l => l.LibroCategorias)
                 .ThenInclude(lc => lc.Categoria)
-            .Select(l => new LibroResponseDto
-            {
-                Id = l.Id,
-                Titulo = l.Titulo,
-                Autor = l.Autor,
-                Descripcion = l.Descripcion,
-                ArchivoUrl = l.ArchivoUrl,
-                PortadaUrl = l.PortadaUrl,
-                EsPublico = l.EsPublico,
-                FechaCreacion = l.FechaCreacion,
-                UsuarioCreadorId = l.UsuarioCreadorId,
-
-                Categorias = l.LibroCategorias
-                    .Select(lc => lc.Categoria.Nombre)
-                    .ToList()
-            })
+            .Include(l => l.Valoraciones)
+            .Select(l => MapLibro(l))
             .ToListAsync();
     }
 
@@ -140,15 +126,7 @@ public class LibroService
         _context.Libros.Add(libro);
         await _context.SaveChangesAsync();
 
-        return new LibroResponseDto
-        {
-            Id = libro.Id,
-            Titulo = libro.Titulo,
-            Autor = libro.Autor,
-            Descripcion = libro.Descripcion,
-            ArchivoUrl = libro.ArchivoUrl,
-            PortadaUrl = libro.PortadaUrl
-        };
+        return MapLibro(libro);
     }
 
     public async Task<(IEnumerable<LibroResponseDto>, int)> GetPagedAsync(
@@ -159,6 +137,9 @@ public class LibroService
     {
         var dbQuery = _context.Libros
             .Where(l => l.EsPublico)
+            .Include(l => l.LibroCategorias)
+                .ThenInclude(lc => lc.Categoria)
+            .Include(l => l.Valoraciones)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(query))
@@ -179,15 +160,7 @@ public class LibroService
             .OrderBy(l => l.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(l => new LibroResponseDto
-            {
-                Id = l.Id,
-                Titulo = l.Titulo,
-                Autor = l.Autor,
-                Descripcion = l.Descripcion,
-                PortadaUrl = l.PortadaUrl,
-                ArchivoUrl = l.ArchivoUrl
-            })
+            .Select(l => MapLibro(l))
             .ToListAsync();
 
         return (libros, total);
@@ -216,4 +189,28 @@ public class LibroService
         await _context.SaveChangesAsync();
     }
 
+    private LibroResponseDto MapLibro(Libro l)
+    {
+        return new LibroResponseDto
+        {
+            Id = l.Id,
+            Titulo = l.Titulo,
+            Autor = l.Autor,
+            Descripcion = l.Descripcion,
+            ArchivoUrl = l.ArchivoUrl,
+            PortadaUrl = l.PortadaUrl,
+            EsPublico = l.EsPublico,
+            FechaCreacion = l.FechaCreacion,
+            UsuarioCreadorId = l.UsuarioCreadorId,
+
+            Categorias = l.LibroCategorias
+                .Select(lc => lc.Categoria.Nombre)
+                .ToList(),
+
+            TotalValoraciones = l.Valoraciones.Count,
+            PromedioValoracion = l.Valoraciones.Any()
+                ? l.Valoraciones.Average(v => v.Puntuacion)
+                : 0
+        };
+    }
 }

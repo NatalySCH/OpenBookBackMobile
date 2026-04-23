@@ -16,6 +16,9 @@
         public DateTime FechaCreacion { get; set; }
 
         public string? UsuarioCreadorId { get; set; }
+
+        public double PromedioValoracion { get; set; }
+        public int TotalValoraciones { get; set; }
         public List<string>? Categorias { get; set; } = new();
     }
 }
