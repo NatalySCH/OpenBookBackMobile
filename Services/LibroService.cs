@@ -144,7 +144,8 @@ public class LibroService
  string? query,
  int page,
  int pageSize,
- string? autor)
+ string? autor,
+ int? categoriaId)
     {
         var dbQuery = _context.Libros
             .Where(l => l.EsPublico)
@@ -164,6 +165,12 @@ public class LibroService
         if (!string.IsNullOrEmpty(autor))
         {
             dbQuery = dbQuery.Where(l => l.Autor.Contains(autor));
+        }
+
+        if (categoriaId.HasValue)
+        {
+            dbQuery = dbQuery.Where(l =>
+                l.LibroCategorias.Any(lc => lc.CategoriaId == categoriaId.Value));
         }
 
         int total = await dbQuery.CountAsync();

@@ -3,6 +3,6 @@
     public class ReadingOrderItem
     {
         public string Href { get; set; }
-        public string Type { get; set; }
+        public string MediaType { get; set; }
     }
 }

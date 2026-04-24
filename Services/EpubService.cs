@@ -3,7 +3,6 @@ using OpenBooksBackMobile.DTOs.EpubDtos;
 using VersOne.Epub;
 using System.IO.Compression;
 using Microsoft.EntityFrameworkCore;
-using OpenBooksBackMobile.DTOs.EpubDtos;
 using OpenBooksBackMobile.Services.Interfaces;
 
 public class EpubService : IEpubService
@@ -71,16 +70,7 @@ public class EpubService : IEpubService
             Console.WriteLine("ERROR AL LEER EPUB:");
             Console.WriteLine(ex.Message);
 
-            // 👉 fallback seguro
-            return new BookManifestDto
-            {
-                Id = libro.Id,
-                Titulo = libro.Titulo,
-                Autor = libro.Autor,
-                ReadingOrder = new List<ReadingOrderItem>(),
-                Resources = new List<ResourceItem>(),
-                Toc = new List<TocLinkDto>()
-            };
+            throw;
         }
     }
 
@@ -155,7 +145,7 @@ public class EpubService : IEpubService
         return epub.ReadingOrder.Select(item => new ReadingOrderItem
         {
             Href = NormalizeHref(item.FilePath),
-            Type = item.ContentType.ToString() ?? string.Empty
+            MediaType = GetMime(item.ContentType) // 👈 agrega esto
         }).ToList();
     }
 
@@ -164,7 +154,7 @@ public class EpubService : IEpubService
         return epub.Content.AllFiles.Local.Select(file => new ResourceItem
         {
             Href = NormalizeHref(file.FilePath),
-            Type = file.ContentType.ToString() ?? string.Empty
+            MediaType = GetMime(file.ContentType)
         }).ToList();
     }
 

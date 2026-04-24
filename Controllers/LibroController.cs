@@ -71,9 +71,10 @@ public class LibroController : ControllerBase
     string? query,
     int page = 1,
     int pageSize = 10,
-    string? autor = null)
+    string? autor = null,
+    int? categoriaId = null)
     {
-        var (libros, total) = await _libroService.GetPagedAsync(query, page, pageSize, autor);
+        var (libros, total) = await _libroService.GetPagedAsync(query, page, pageSize, autor, categoriaId);
 
         return Ok(new
         {

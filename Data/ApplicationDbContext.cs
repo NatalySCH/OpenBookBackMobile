@@ -19,6 +19,8 @@ namespace OpenBooksBackMobile.Data
         public DbSet<Resaltador> Resaltadores { get; set; }
         public DbSet<Valoracion> Valoraciones { get; set; }
         public DbSet<Resena> Resenas { get; set; }
+        public DbSet<Sugerencia> Sugerencias { get; set; }
+        public DbSet<Denuncia> Denuncias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -105,29 +107,69 @@ namespace OpenBooksBackMobile.Data
                 entity.HasIndex(v => new { v.UsuarioId, v.LibroId })
                     .IsUnique();
 
-                modelBuilder.Entity<Resena>(entity =>
-                {
-                    entity.ToTable("Resenas");
+            });
+            modelBuilder.Entity<Resena>(entity =>
+            {
+                entity.ToTable("Resenas");
 
-                    entity.HasKey(r => r.Id);
+                entity.HasKey(r => r.Id);
 
-                    entity.HasOne(r => r.Usuario)
-                          .WithMany()
-                          .HasForeignKey(r => r.UsuarioId)
-                          .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(r => r.Usuario)
+                      .WithMany()
+                      .HasForeignKey(r => r.UsuarioId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
-                    entity.HasOne(r => r.Libro)
-                          .WithMany(l => l.Resenas)
-                          .HasForeignKey(r => r.LibroId)
-                          .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(r => r.Libro)
+                      .WithMany(l => l.Resenas)
+                      .HasForeignKey(r => r.LibroId)
+                      .OnDelete(DeleteBehavior.Cascade);
 
-                    entity.Property(r => r.Texto)
-                          .IsRequired()
-                          .HasMaxLength(2000);
+                entity.Property(r => r.Texto)
+                      .IsRequired()
+                      .HasMaxLength(2000);
 
-                    entity.Property(r => r.Fecha)
-                          .IsRequired();
-                });
+                entity.Property(r => r.Fecha)
+                      .IsRequired();
+            });
+            modelBuilder.Entity<Sugerencia>(entity =>
+            {
+                entity.ToTable("Sugerencias");
+
+                entity.HasKey(s => s.Id);
+
+                entity.Property(s => s.Comentario)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+               
+                entity.HasOne(s => s.Usuario)
+                    .WithMany() 
+                    .HasForeignKey(s => s.UsuarioId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                entity.HasIndex(s => s.UsuarioId);
+            });
+
+            modelBuilder.Entity<Denuncia>(entity =>
+            {
+                entity.ToTable("Denuncias");
+
+                entity.HasKey(d => d.Id);
+
+                entity.Property(d => d.Comentario)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                // 🔹 Relación: Denunciante
+                entity.HasOne(d => d.UsuarioDenunciante)
+                    .WithMany()
+                    .HasForeignKey(d => d.IdDenunciante)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // 🔹 Relación: Denunciado
+                entity.HasOne(d => d.UsuarioDenunciado)
+                    .WithMany()
+                    .HasForeignKey(d => d.IdDenunciado)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

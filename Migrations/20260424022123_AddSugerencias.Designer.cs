@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using OpenBooksBackMobile.Data;
@@ -11,9 +12,11 @@ using OpenBooksBackMobile.Data;
 namespace OpenBooksBackMobile.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424022123_AddSugerencias")]
+    partial class AddSugerencias
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,36 +172,6 @@ namespace OpenBooksBackMobile.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categorias");
-                });
-
-            modelBuilder.Entity("OpenBooksBackMobile.Entities.Denuncia", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comentario")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("IdDenunciado")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("IdDenunciante")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IdDenunciado");
-
-                    b.HasIndex("IdDenunciante");
-
-                    b.ToTable("Denuncias", (string)null);
                 });
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.Libro", b =>
@@ -591,25 +564,6 @@ namespace OpenBooksBackMobile.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("OpenBooksBackMobile.Entities.Denuncia", b =>
-                {
-                    b.HasOne("OpenBooksBackMobile.Entities.Usuario", "UsuarioDenunciado")
-                        .WithMany()
-                        .HasForeignKey("IdDenunciado")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("OpenBooksBackMobile.Entities.Usuario", "UsuarioDenunciante")
-                        .WithMany()
-                        .HasForeignKey("IdDenunciante")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("UsuarioDenunciado");
-
-                    b.Navigation("UsuarioDenunciante");
                 });
 
             modelBuilder.Entity("OpenBooksBackMobile.Entities.Libro", b =>
