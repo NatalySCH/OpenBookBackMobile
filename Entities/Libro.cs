@@ -21,5 +21,6 @@
         public ICollection<UsuarioLibro> Usuarios { get; set; } = new List<UsuarioLibro>();
         public ICollection<LibroCategoria> LibroCategorias { get; set; } = new List<LibroCategoria>();
         public ICollection<Valoracion> Valoraciones { get; set; } = new List<Valoracion>();
+        public ICollection<Resena> Resenas { get; set; } = new List<Resena>();
     }
 }

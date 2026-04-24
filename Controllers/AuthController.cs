@@ -36,7 +36,9 @@ namespace OpenBooksBackMobile.Controllers
 
             return Ok(new
             {
-                token
+                token,
+                username = usuario.UserName,
+                correo = usuario.Email
             });
         }
 
@@ -45,7 +47,7 @@ namespace OpenBooksBackMobile.Controllers
         {
             var usuario = new Usuario
             {
-                UserName = request.Correo,
+                UserName = request.UserName,
                 Email = request.Correo
             };
 
@@ -54,10 +56,12 @@ namespace OpenBooksBackMobile.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // 🔥 Asignar rol automáticamente
             await _userManager.AddToRoleAsync(usuario, "Usuario");
 
-            return Ok("Usuario registrado correctamente");
+            return Ok(new
+            {
+                mensaje = "Usuario registrado correctamente"
+            });
         }
     }
 }

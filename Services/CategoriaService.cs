@@ -17,29 +17,6 @@ public class CategoriaService
         _mapper = mapper;
     }
 
-    public async Task<PagedResult<CategoriaResponseDto>> GetAllAsync(int pageNumber, int pageSize)
-    {
-        var query = _context.Categorias.AsNoTracking();
-
-        int totalRecords = await query.CountAsync();
-
-        var categorias = await query
-            .OrderBy(c => c.Id)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
-
-        var dto = _mapper.Map<List<CategoriaResponseDto>>(categorias);
-
-        return new PagedResult<CategoriaResponseDto>
-        {
-            Results = dto,
-            TotalRecords = totalRecords,
-            PageSize = pageSize,
-            CurrentPage = pageNumber
-        };
-    }
-
     public async Task<CategoriaResponseDto?> GetByIdAsync(int id)
     {
         var categoria = await _context.Categorias
@@ -48,7 +25,14 @@ public class CategoriaService
 
         if (categoria == null) return null;
 
-        return _mapper.Map<CategoriaResponseDto>(categoria);
+        return new CategoriaResponseDto
+        {
+            Id = categoria.Id,
+            Nombre = categoria.Nombre,
+
+            TotalLibros = await _context.LibroCategorias
+                .CountAsync(lc => lc.CategoriaId == id)
+        };
     }
 
     public async Task<CategoriaResponseDto> CreateAsync(CategoriaCreateDto dto)
@@ -89,7 +73,6 @@ public class CategoriaService
     {
         var categoria = await _context.Categorias
             .AsNoTracking()
-            .Include(c => c.LibroCategorias)
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (categoria == null)
@@ -99,7 +82,9 @@ public class CategoriaService
         {
             Id = categoria.Id,
             Nombre = categoria.Nombre,
-            TotalLibros = categoria.LibroCategorias.Count
+
+            TotalLibros = await _context.LibroCategorias
+                .CountAsync(lc => lc.CategoriaId == id)
         };
     }
 }

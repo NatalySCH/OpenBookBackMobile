@@ -53,6 +53,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+
 //Identity
 builder.Services.AddIdentity<Usuario, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -94,6 +95,7 @@ builder.Services.AddScoped<UsuarioLibroService>();
 builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<ResaltadorService>();
 builder.Services.AddScoped<MarcadorService>();
+builder.Services.AddScoped<ValoracionService>();
 builder.Services.AddScoped<IPdfToEpubConverter, PdfToEpubConverter>();
 
 

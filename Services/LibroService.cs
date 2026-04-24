@@ -17,16 +17,17 @@ public class LibroService
         _converter = converter;
     }
 
-    // 🔹 Obtener catálogo
     public async Task<List<LibroResponseDto>> GetAllAsync()
     {
-        return await _context.Libros
+        var libros = await _context.Libros
             .Where(l => l.EsPublico)
             .Include(l => l.LibroCategorias)
                 .ThenInclude(lc => lc.Categoria)
             .Include(l => l.Valoraciones)
-            .Select(l => MapLibro(l))
+            .Include(l => l.Resenas)
             .ToListAsync();
+
+        return libros.Select(MapLibro).ToList();
     }
 
     // 🔹 Subir archivo (libro)
@@ -81,7 +82,10 @@ public class LibroService
             EsPublico = dto.EsPublico,
             PortadaUrl = dto.PortadaUrl,
             UsuarioCreadorId = usuarioId,
-            FechaCreacion = DateTime.UtcNow
+            FechaCreacion = DateTime.UtcNow,
+            LibroCategorias = new List<LibroCategoria>(),
+            Valoraciones = new List<Valoracion>(),
+            Resenas = new List<Resena>()
         };
         var extension = Path.GetExtension(dto.ArchivoUrl).ToLower();
 
@@ -114,39 +118,47 @@ public class LibroService
 
         if (dto.CategoriaIds != null && dto.CategoriaIds.Any())
         {
-            foreach (var catId in dto.CategoriaIds)
-            {
-                libro.LibroCategorias.Add(new LibroCategoria
+            libro.LibroCategorias = dto.CategoriaIds
+                .Select(id => new LibroCategoria
                 {
-                    CategoriaId = catId
-                });
-            }
+                    CategoriaId = id
+                })
+                .ToList();
         }
 
         _context.Libros.Add(libro);
         await _context.SaveChangesAsync();
 
-        return MapLibro(libro);
+        var libroDb = await _context.Libros
+            .Where(l => l.Id == libro.Id)
+            .Include(l => l.LibroCategorias)
+                .ThenInclude(lc => lc.Categoria)
+            .Include(l => l.Valoraciones)
+            .Include(l => l.Resenas)
+            .FirstAsync();
+
+        return MapLibro(libroDb);
     }
 
     public async Task<(IEnumerable<LibroResponseDto>, int)> GetPagedAsync(
-    string? query,
-    int page,
-    int pageSize,
-    string? autor)
+ string? query,
+ int page,
+ int pageSize,
+ string? autor)
     {
         var dbQuery = _context.Libros
             .Where(l => l.EsPublico)
             .Include(l => l.LibroCategorias)
                 .ThenInclude(lc => lc.Categoria)
             .Include(l => l.Valoraciones)
+            .Include(l => l.Resenas)
             .AsQueryable();
 
         if (!string.IsNullOrEmpty(query))
         {
             dbQuery = dbQuery.Where(l =>
                 l.Titulo.Contains(query) ||
-                l.Descripcion.Contains(query));
+                (l.Descripcion != null && l.Descripcion.Contains(query)));
         }
 
         if (!string.IsNullOrEmpty(autor))
@@ -156,12 +168,13 @@ public class LibroService
 
         int total = await dbQuery.CountAsync();
 
-        var libros = await dbQuery
+        var librosDb = await dbQuery
             .OrderBy(l => l.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(l => MapLibro(l))
             .ToListAsync();
+
+        var libros = librosDb.Select(MapLibro);
 
         return (libros, total);
     }
@@ -203,14 +216,17 @@ public class LibroService
             FechaCreacion = l.FechaCreacion,
             UsuarioCreadorId = l.UsuarioCreadorId,
 
-            Categorias = l.LibroCategorias
+            Categorias = l.LibroCategorias?
                 .Select(lc => lc.Categoria.Nombre)
-                .ToList(),
+                .ToList() ?? new List<string>(),
 
-            TotalValoraciones = l.Valoraciones.Count,
-            PromedioValoracion = l.Valoraciones.Any()
+            TotalValoraciones = l.Valoraciones?.Count ?? 0,
+
+            PromedioValoracion = (l.Valoraciones != null && l.Valoraciones.Any())
                 ? l.Valoraciones.Average(v => v.Puntuacion)
-                : 0
+                : 0,
+
+            
         };
     }
 }
