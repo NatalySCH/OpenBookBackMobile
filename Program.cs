@@ -96,6 +96,7 @@ builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddScoped<ResaltadorService>();
 builder.Services.AddScoped<MarcadorService>();
 builder.Services.AddScoped<ValoracionService>();
+builder.Services.AddScoped<ResenaService>();
 builder.Services.AddScoped<IPdfToEpubConverter, PdfToEpubConverter>();
 
 

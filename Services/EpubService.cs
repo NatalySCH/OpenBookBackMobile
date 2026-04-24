@@ -26,33 +26,62 @@ public class EpubService : IEpubService
 
     public async Task<BookManifestDto> GetManifestAsync(int libroId)
     {
+        Console.WriteLine("ENTRÓ A GET MANIFEST");
+
         var libro = await _context.Libros
             .FirstOrDefaultAsync(l => l.Id == libroId);
 
         if (libro == null)
             throw new Exception("Libro no encontrado");
 
+        Console.WriteLine($"LIBRO ID: {libroId}");
+        Console.WriteLine($"ARCHIVO URL: {libro.ArchivoUrl}");
+
         if (string.IsNullOrEmpty(libro.ArchivoUrl))
             throw new Exception("El archivo EPUB no tiene ruta");
 
         var ruta = GetRutaLibro(libro.ArchivoUrl);
 
+        Console.WriteLine($"RUTA CALCULADA: {ruta}");
+        Console.WriteLine($"EXISTE ARCHIVO: {File.Exists(ruta)}");
+
         if (!File.Exists(ruta))
             throw new Exception("Archivo EPUB no encontrado en el servidor");
 
-        using var epubStream = File.OpenRead(ruta);
-
-        var epub = await EpubReader.ReadBookAsync(epubStream);
-
-        return new BookManifestDto
+        try
         {
-            Id = libro.Id,
-            Titulo = epub.Title,
-            Autor = epub.Author,
-            ReadingOrder = BuildReadingOrder(epub),
-            Resources = BuildResources(epub),
-            Toc = BuildToc(epub)
-        };
+            using var epubStream = File.OpenRead(ruta);
+            var epub = await EpubReader.ReadBookAsync(epubStream);
+
+            Console.WriteLine("EPUB cargado correctamente");
+            Console.WriteLine($"Titulo: {epub.Title}");
+
+            return new BookManifestDto
+            {
+                Id = libro.Id,
+                Titulo = epub.Title,
+                Autor = epub.Author,
+                ReadingOrder = BuildReadingOrder(epub),
+                Resources = BuildResources(epub),
+                Toc = BuildToc(epub)
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("ERROR AL LEER EPUB:");
+            Console.WriteLine(ex.Message);
+
+            // 👉 fallback seguro
+            return new BookManifestDto
+            {
+                Id = libro.Id,
+                Titulo = libro.Titulo,
+                Autor = libro.Autor,
+                ReadingOrder = new List<ReadingOrderItem>(),
+                Resources = new List<ResourceItem>(),
+                Toc = new List<TocLinkDto>()
+            };
+        }
     }
 
     public async Task<(byte[] Data, string ContentType)> GetResourceAsync(int libroId, string path)
