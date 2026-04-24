@@ -123,4 +123,15 @@ public class LibroController : ControllerBase
 
         return Ok(categoria);
     }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteLibro(int id)
+    {
+        var result = await _libroService.DeleteAsync(id);
+
+        if (!result)
+            return NotFound();
+
+        return NoContent();
+    }
 }

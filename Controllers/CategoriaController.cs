@@ -13,6 +13,13 @@ public class CategoriasController : ControllerBase
         _categoriaService = categoriaService;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> GetCategorias(int pageNumber = 1, int pageSize = 10)
+    {
+        var result = await _categoriaService.GetAllPagedAsync(pageNumber, pageSize);
+        return Ok(result);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<CategoriaResponseDto>> GetById(int id)
     {

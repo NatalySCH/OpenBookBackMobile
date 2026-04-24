@@ -87,4 +87,38 @@ public class CategoriaService
                 .CountAsync(lc => lc.CategoriaId == id)
         };
     }
+
+    public async Task<PagedResult<CategoriaResponseDto>> GetAllPagedAsync(int pageNumber, int pageSize)
+    {
+        var query = _context.Categorias.AsNoTracking();
+
+        var total = await query.CountAsync();
+
+        var categorias = await query
+            .OrderBy(c => c.Nombre)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var lista = new List<CategoriaResponseDto>();
+
+        foreach (var categoria in categorias)
+        {
+            lista.Add(new CategoriaResponseDto
+            {
+                Id = categoria.Id,
+                Nombre = categoria.Nombre,
+                TotalLibros = await _context.LibroCategorias
+                    .CountAsync(lc => lc.CategoriaId == categoria.Id)
+            });
+        }
+
+        return new PagedResult<CategoriaResponseDto>
+        {
+            Results = lista,
+            TotalRecords = total,
+            PageSize = pageSize,
+            CurrentPage = pageNumber
+        };
+    }
 }

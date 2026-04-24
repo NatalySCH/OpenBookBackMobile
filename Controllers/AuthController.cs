@@ -38,7 +38,8 @@ namespace OpenBooksBackMobile.Controllers
             {
                 token,
                 username = usuario.UserName,
-                correo = usuario.Email
+                correo = usuario.Email,
+                fotoPerfilUrl = usuario.FotoPerfilUrl
             });
         }
 

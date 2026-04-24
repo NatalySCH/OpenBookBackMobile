@@ -13,11 +13,13 @@ namespace OpenBooksBackMobile.Services
     {
         private readonly UserManager<Usuario> _userManager;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment _env;
 
-        public UsuarioService(UserManager<Usuario> userManager, IMapper mapper)
+        public UsuarioService(UserManager<Usuario> userManager, IMapper mapper, IWebHostEnvironment env)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _env = env;
         }
 
         public async Task<List<UsuarioResponseDto>> GetAllAsync()
@@ -66,11 +68,13 @@ namespace OpenBooksBackMobile.Services
             if (!string.IsNullOrWhiteSpace(dto.NombreCompleto))
                 usuario.NombreCompleto = dto.NombreCompleto;
 
+            if (!string.IsNullOrWhiteSpace(dto.FotoPerfilUrl))
+                usuario.FotoPerfilUrl = dto.FotoPerfilUrl;
+
             var result = await _userManager.UpdateAsync(usuario);
 
             if (!result.Succeeded) return false;
 
-            // Cambio de contraseña
             if (!string.IsNullOrWhiteSpace(dto.Contraseña))
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(usuario);
@@ -95,7 +99,8 @@ namespace OpenBooksBackMobile.Services
             {
                 UserName = dto.UserName,
                 Email = dto.Email,
-                NombreCompleto = dto.NombreCompleto
+                NombreCompleto = dto.NombreCompleto,
+                FotoPerfilUrl = dto.FotoPerfilUrl
             };
 
             var result = await _userManager.CreateAsync(usuario, dto.Contraseña);
@@ -139,6 +144,25 @@ namespace OpenBooksBackMobile.Services
                 PageSize = pageSize,
                 CurrentPage = pageNumber
             };
+        }
+
+
+        public async Task<string> UploadFotoPerfilAsync(IFormFile archivo)
+        {
+            var carpeta = Path.Combine(_env.WebRootPath, "uploads/perfiles");
+
+            if (!Directory.Exists(carpeta))
+                Directory.CreateDirectory(carpeta);
+
+            var nombre = $"{Guid.NewGuid()}_{archivo.FileName}";
+            var ruta = Path.Combine(carpeta, nombre);
+
+            using (var stream = new FileStream(ruta, FileMode.Create))
+            {
+                await archivo.CopyToAsync(stream);
+            }
+
+            return $"/uploads/perfiles/{nombre}";
         }
 
     }

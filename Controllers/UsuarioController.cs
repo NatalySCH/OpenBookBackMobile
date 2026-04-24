@@ -57,6 +57,16 @@ namespace OpenBooksBackMobile.Controllers
             return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, usuario);
         }
 
+        [HttpPost("upload-foto")]
+        public async Task<IActionResult> UploadFotoPerfil(IFormFile archivo)
+        {
+            if (archivo == null || archivo.Length == 0)
+                return BadRequest("Archivo inválido");
+
+            var url = await _usuarioService.UploadFotoPerfilAsync(archivo);
+            return Ok(new { url });
+        }
+
         // 🔹 PATCH (actualizar)
         [Authorize]
         [HttpPatch("{id}")]

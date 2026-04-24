@@ -236,4 +236,27 @@ public class LibroService
             
         };
     }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var libro = await _context.Libros
+            .Include(l => l.LibroCategorias)
+            .Include(l => l.Valoraciones)
+            .Include(l => l.Resenas)
+            .FirstOrDefaultAsync(l => l.Id == id);
+
+        if (libro == null)
+            return false;
+
+        // 🔹 Limpiar relaciones (buena práctica)
+        _context.LibroCategorias.RemoveRange(libro.LibroCategorias);
+
+        _context.Valoraciones.RemoveRange(libro.Valoraciones);
+        _context.Resenas.RemoveRange(libro.Resenas);
+
+        _context.Libros.Remove(libro);
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }
