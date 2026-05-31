@@ -4,6 +4,7 @@ using OpenBooksBackMobile.Entities;
 using OpenBooksBackMobile.DTOs;
 using System.ComponentModel.DataAnnotations;
 using OpenBooksBackMobile.DTOs.ValoracionDtos;
+using OpenBooksBackMobile.Entities;
 
 public class ValoracionService
 {
@@ -110,41 +111,25 @@ public class ValoracionService
     }
 
     // 🔹 TOP 5 LIBROS (por promedio)
-    public async Task<List<ValoracionResponseDto>> GetTop5Async()
+    public async Task<List<Top5ValoracionDto>> GetTop5Async()
     {
-        var top = await _context.Valoraciones
+        return await _context.Valoraciones
             .GroupBy(v => v.LibroId)
-            .Select(g => new
+            .Select(g => new Top5ValoracionDto
             {
                 LibroId = g.Key,
-                Promedio = g.Average(x => x.Puntuacion)
+                Promedio = g.Average(x => x.Puntuacion),
+                TotalValoraciones = g.Count()
             })
             .OrderByDescending(x => x.Promedio)
             .Take(5)
-            .ToListAsync();
-
-        var result = new List<ValoracionResponseDto>();
-
-        foreach (var item in top)
-        {
-            var valoracion = await _context.Valoraciones
-                .Where(v => v.LibroId == item.LibroId)
-                .OrderByDescending(v => v.Puntuacion)
-                .FirstOrDefaultAsync();
-
-            if (valoracion != null)
+            .Join(_context.Libros, t => t.LibroId, l => l.Id, (t, l) => new Top5ValoracionDto
             {
-                result.Add(new ValoracionResponseDto
-                {
-                    Id = valoracion.Id,
-                    UsuarioId = valoracion.UsuarioId,
-                    LibroId = valoracion.LibroId,
-                    Puntuacion = valoracion.Puntuacion,
-                    Fecha = valoracion.Fecha
-                });
-            }
-        }
-
-        return result;
+                LibroId = t.LibroId,
+                Titulo = l.Titulo,
+                Promedio = t.Promedio,
+                TotalValoraciones = t.TotalValoraciones
+            })
+            .ToListAsync();
     }
 }

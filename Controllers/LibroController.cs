@@ -114,14 +114,18 @@ public class LibroController : ControllerBase
     }
 
     [HttpGet("{id}/libros")]
-    public async Task<IActionResult> GetLibrosByCategoria(int id)
+    public async Task<IActionResult> GetLibrosByCategoria(int id, int page = 1, int pageSize = 10)
     {
-        var categoria = await _categoriaService.GetByIdWithBooksAsync(id);
+        var (libros, total) = await _libroService.GetPagedAsync(null, page, pageSize, null, id);
 
-        if (categoria == null)
-            return NotFound();
-
-        return Ok(categoria);
+        return Ok(new
+        {
+            Page = page,
+            PageSize = pageSize,
+            Total = total,
+            TotalPages = (int)Math.Ceiling((double)total / pageSize),
+            Data = libros
+        });
     }
 
     [HttpDelete("{id}")]

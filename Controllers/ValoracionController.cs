@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OpenBooksBackMobile.DTOs.ValoracionDtos;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 [Route("api/[controller]")]
@@ -24,8 +25,15 @@ public class ValoracionesController : ControllerBase
         if (string.IsNullOrEmpty(usuarioId))
             return Unauthorized("Token inválido.");
 
-        var result = await _service.CreateAsync(usuarioId, dto);
-        return Ok(result);
+        try
+        {
+            var result = await _service.CreateAsync(usuarioId, dto);
+            return Ok(result);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     // 🔹 UPDATE

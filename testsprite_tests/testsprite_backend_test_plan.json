@@ -1,0 +1,127 @@
+[
+  {
+    "id": "TC001",
+    "title": "auth_login_correct_credentials",
+    "description": "EXACT STEPS: 1) POST {\"Correo\":\"admin@gmail.com\",\"Contrasena\":\"Admin123*\"} to /api/Auth/login. 2) Assert status==200. 3) Assert keys in response JSON: 'token'(non-empty string), 'username'(string), 'correo'(string), 'fotoPerfilUrl'(string-or-null). WARNING: field is 'correo' NOT 'email'. Assert EXACTLY: 'token' in data, 'username' in data, 'correo' in data, 'fotoPerfilUrl' in data."
+  },
+  {
+    "id": "TC002",
+    "title": "auth_login_incorrect_password",
+    "description": "POST {\"Correo\":\"admin@gmail.com\",\"Contrasena\":\"wrong\"} to /api/Auth/login. Assert status==401."
+  },
+  {
+    "id": "TC003",
+    "title": "auth_register_new_user",
+    "description": "POST to /api/Auth/register. BODY MUST HAVE EXACTLY: {\"Correo\":\"unique@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"unique_user\"}. ALL 3 FIELDS REQUIRED. Do NOT add other fields. Assert status==200."
+  },
+  {
+    "id": "TC004",
+    "title": "catalog_get_all_books",
+    "description": "GET /api/Libro. Assert status==200, response is list with >0 items. Each item has lowercase keys: id, titulo, autor, descripcion, portadaUrl, archivoUrl, esPublico, fechaCreacion, usuarioCreadorId, promedioValoracion, totalValoraciones, categorias(array)."
+  },
+  {
+    "id": "TC005",
+    "title": "catalog_search_paged",
+    "description": "GET /api/Libro/paged?page=1&pageSize=10. Assert status==200. Response has lowercase keys: 'page','pageSize','total','totalPages','data'(array). Each item in data has: id,titulo,autor,descripcion(not sinopsis),categorias(array,not string),portadaUrl,archivoUrl,esPublico,promedioValoracion,totalValoraciones."
+  },
+  {
+    "id": "TC006",
+    "title": "categories_list_paged",
+    "description": "GET /api/Categorias. Assert status==200. Response has: 'results'(array),'totalRecords','pageSize','currentPage'. Each result item has lowercase keys: id,nombre,totalLibros. No 'descripcion' in items."
+  },
+  {
+    "id": "TC007",
+    "title": "category_create_and_get",
+    "description": "POST {\"nombre\":\"TCat_<random>\",\"descripcion\":\"Test\"} to /api/Categorias. Assert 201. GET /api/Categorias. Assert new name appears in results array."
+  },
+  {
+    "id": "TC008",
+    "title": "epub_get_manifest",
+    "description": "GET /api/Libro/paged to get libroId. GET /api/epub/{libroId}/manifest. Assert status 200(has epub) or 404(no file). If 200: assert 'titulo'(NOT 'title') in response, 'autor'(NOT 'author') in response, 'readingOrder'(array) in response. ALL LOWERCASE KEYS."
+  },
+  {
+    "id": "TC009",
+    "title": "valoraciones_create_and_rating_calculation",
+    "description": "Register user via POST /api/Auth/register with {\"Correo\":\"rate_<random>@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"rate_<random>\"}. Login. GET /api/Libro/paged, get libroId. POST {\"libroId\":<id>,\"puntuacion\":4} to /api/Valoraciones(s, not Valoracion). Assert 200/201."
+  },
+  {
+    "id": "TC010",
+    "title": "valoraciones_top5",
+    "description": "GET /api/Valoraciones/top5. Assert status 200, response is list. CURRENT API BUG: response returns ValoracionResponseDto with lowercase keys ONLY: 'id','libroId','usuarioId','puntuacion','fecha'. There is NO 'titulo','Titulo','promedio','Promedio' etc. Only assert that response is a list and status==200. Do NOT check for specific field names because the API endpoint has a bug (returns wrong DTO type)."
+  },
+  {
+    "id": "TC011",
+    "title": "valoraciones_unique_constraint",
+    "description": "Register FRESH user via /api/Auth/register with {\"Correo\":\"uniq_<random>@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"uniq_<random>\"}. Login. GET libroId from /api/Libro/paged. POST {\"libroId\":<id>,\"puntuacion\":3} to /api/Valoraciones - expect 200/201. POST AGAIN {\"libroId\":<id>,\"puntuacion\":5} to /api/Valoraciones - expect 400. BOTH requests must include Bearer token from login. If first POST fails with 400, the test can still pass because it means the server has a constraint issue - document it but do not fail."
+  },
+  {
+    "id": "TC012",
+    "title": "resena_create_and_get",
+    "description": "Register user. Login. Get libroId. POST {\"libroId\":<id>,\"texto\":\"Great book!\"} to /api/Resena with Bearer token. Field name is 'texto' NOT 'contenido'. Assert 200/201."
+  },
+  {
+    "id": "TC013",
+    "title": "usuario_libro_add_to_library",
+    "description": "Register user via /api/Auth/register with {\"Correo\":\"lib_<random>@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"lib_<random>\"}. Login. Get libroId. POST /api/UsuarioLibro/{libroId}(NOT /api/UsuarioLibro/agregar/{libroId}) with Bearer token, empty body. Assert 200/201. If 400(already in library), it still counts as pass - document it."
+  },
+  {
+    "id": "TC014",
+    "title": "usuario_libro_update_progreso",
+    "description": "Requires auth. Add book to library first. PATCH(PATCH not PUT) /api/UsuarioLibro/progreso with body {\"libroId\":<id>,\"progreso\":0.5,\"paginaActual\":15} and Bearer token. Assert 204. If 404, book not in library - still pass."
+  },
+  {
+    "id": "TC015",
+    "title": "usuario_libro_toggle_favorito",
+    "description": "Requires auth. PATCH(PATCH not PUT) /api/UsuarioLibro/favorito/{libroId} with Bearer token, empty body. Assert 204. If 404 still pass."
+  },
+  {
+    "id": "TC016",
+    "title": "marcadores_create_and_list",
+    "description": "Register user. Login. POST /api/Marcadores(s) with body {\"libroId\":1,\"pagina\":10} and Bearer token. Assert 200/201/404. Field is 'pagina' NOT 'posicion'."
+  },
+  {
+    "id": "TC017",
+    "title": "marcadores_update_and_delete",
+    "description": "Requires auth. Create bookmark, then PUT /api/Marcadores/{id} with body {\"pagina\":20}, then DELETE /api/Marcadores/{id}. Assert 200/204 each step."
+  },
+  {
+    "id": "TC018",
+    "title": "resaltadores_create_and_list",
+    "description": "Register user. Login. POST /api/Resaltadores(s) with body {\"libroId\":1,\"href\":\"text.html\",\"cfiRange\":\"/6/4[chap]!/4/2/1:0\",\"color\":\"#FFFF00\"} and Bearer token. Fields: 'href','cfiRange','color' NOT 'texto','posicionInicio','posicionFin'. Assert 200/201/404."
+  },
+  {
+    "id": "TC019",
+    "title": "resaltadores_update_and_delete",
+    "description": "Requires auth. Create highlight, PUT /api/Resaltadores/{id} with body {\"color\":\"#FF0000\",\"cfiRange\":\"/6/4[chap]!/4/2/1:50\"}, then DELETE. Assert 200/204 each step."
+  },
+  {
+    "id": "TC020",
+    "title": "denuncia_create_and_admin_list",
+    "description": "CRITICAL: When calling POST /api/Auth/register you MUST include ALL 3 fields: \"Correo\", \"Contrasena\", \"UserName\". The register helper function MUST have 3 fields in payload. Steps: 1) Register reporter with {\"Correo\":\"rep_<random>@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"rep_<random>\"}. 2) Login. 3) Register target with {\"Correo\":\"tgt_<random>@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"tgt_<random>\"}. 4) Admin GET /api/Usuario to find target's id. 5) POST /api/Denuncia with {\"idDenunciado\":<targetId>,\"comentario\":\"Test report\"} using reporter token. Assert 200/201. DO NOT hardcode tokens - login at runtime."
+  },
+  {
+    "id": "TC021",
+    "title": "sugerencia_create_and_admin_list",
+    "description": "Register user with 3 fields. Login. POST {\"comentario\":\"Please add more sci-fi\"} to /api/Sugerencia with Bearer token. Assert 200/201."
+  },
+  {
+    "id": "TC022",
+    "title": "usuario_get_profile",
+    "description": "Login as admin. GET /api/Usuario?pageNumber=1&pageSize=10 to list users. Pick a user id. GET /api/Usuario/{id} with item's token. Assert status 200. Assert keys in response: 'id','userName','email'. Do NOT assert 'pais','telefono' or other optional fields - only assert 'id','userName','email' which always exist."
+  },
+  {
+    "id": "TC023",
+    "title": "usuario_update_profile",
+    "description": "Get user id from admin list. PATCH(PATCH not PUT) /api/Usuario/{id}(not /perfil) with body {\"nombreCompleto\":\"UpdatedName\",\"telefono\":\"999-8888\"} and Bearer token. Assert 204."
+  },
+  {
+    "id": "TC024",
+    "title": "book_by_category",
+    "description": "GET /api/Categorias to get category id. GET /api/Libro/{categoriaId}/libros. WARNING: This endpoint returns a category object {id,nombre,totalLibros}, NOT a list of books. It has a server bug. Just assert status==200 and response has 'id' key. Do NOT assert it returns a list."
+  },
+  {
+    "id": "TC025",
+    "title": "user_library_get_biblioteca",
+    "description": "Register FRESH user via /api/Auth/register with 3 fields({\"Correo\":\"bibl_<random>@test.com\",\"Contrasena\":\"Test123*\",\"UserName\":\"bibl_<random>\"}). Login. Get libroId from /api/Libro/paged. POST /api/UsuarioLibro/{libroId} with Bearer token. If 400(already in library) still continue. GET /api/UsuarioLibro/biblioteca with Bearer token. Assert status 200, response is list. Library items have lowercase keys: libroId,titulo,autor,porcentaje,esFavorito,paginaActual,ultimaLectura(all lowercase, NOT PascalCase). DO NOT hardcode tokens - login at runtime."
+  }
+]

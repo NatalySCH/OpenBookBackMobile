@@ -1,0 +1,414 @@
+version: "2"
+type: backend
+tech_stack:
+  - language: C#
+  - framework: ASP.NET Core 8
+  - database: PostgreSQL
+  - other:
+    - Entity Framework Core 8
+    - JWT Bearer Authentication
+    - AutoMapper
+    - Swagger
+    - VersOne.Epub
+    - UglyToad.PdfPig
+features:
+  - name: Authentication & User Management
+    description: User registration, JWT login, password recovery, profile management
+    files:
+      - Controllers/AuthController.cs
+      - Services/Auth/JwtTokenService.cs
+      - Services/UsuarioService.cs
+      - Entities/Usuario.cs
+    endpoints:
+      - method: POST
+        path: /api/Auth/login
+        description: User login with email and password, returns JWT token
+        auth_required: false
+        response_schema:
+          "200": "{ token: string, username: string, email: string, fotoPerfilUrl: string }"
+          "400": Validation error
+      - method: POST
+        path: /api/Auth/register
+        description: Register new user with role Usuario
+        auth_required: false
+        request_schema:
+          body:
+            Correo: string
+            Contrasena: string
+        response_schema:
+          "200": Success message
+          "400": Validation error
+      - method: GET
+        path: /api/Usuario
+        description: List all users with pagination (Admin)
+        auth_required: true
+        response_schema:
+          "200": "PagedResult<UsuarioDto>"
+      - method: GET
+        path: /api/Usuario/{id}
+        description: Get user by ID
+        auth_required: true
+        response_schema:
+          "200": UsuarioDto
+          "404": Not found
+      - method: POST
+        path: /api/Usuario
+        description: Create user manually
+        auth_required: false
+      - method: POST
+        path: /api/Usuario/upload-foto
+        description: Upload profile photo
+        auth_required: false
+      - method: PATCH
+        path: /api/Usuario/{id}
+        description: Partially update user fields
+        auth_required: true
+      - method: DELETE
+        path: /api/Usuario/{id}
+        description: Delete user
+        auth_required: true
+      - method: POST
+        path: /api/Usuario/solicitar-recuperacion
+        description: Request password reset
+        auth_required: false
+      - method: POST
+        path: /api/Usuario/reset-password
+        description: Reset password with token
+        auth_required: false
+    depends_on: []
+  - name: Book Catalog
+    description: Public catalog with search, filter by category/author, pagination
+    files:
+      - Controllers/LibroController.cs
+      - Services/LibroService.cs
+      - Entities/Libro.cs
+    endpoints:
+      - method: GET
+        path: /api/Libro
+        description: Get full public catalog with categories, avg rating, review count
+        auth_required: false
+        response_schema:
+          "200": "LibroResponseDto[]"
+      - method: POST
+        path: /api/Libro/upload-libro
+        description: Upload book file (epub/pdf) to server
+        auth_required: false
+      - method: POST
+        path: /api/Libro/upload-portada
+        description: Upload cover image
+        auth_required: false
+      - method: POST
+        path: /api/Libro
+        description: Create book with metadata, PDF auto-converted to EPUB
+        auth_required: true
+      - method: GET
+        path: /api/Libro/paged
+        description: Search/paginated catalog with filters (query, autor, categoriaId, page, pageSize)
+        auth_required: false
+        response_schema:
+          "200": "PagedResult<LibroResponseDto>"
+      - method: GET
+        path: /api/Libro/{id}/descargar
+        description: Download book file as epub
+        auth_required: true
+      - method: POST
+        path: /api/Libro/{id}/categorias
+        description: Assign categories to book
+        auth_required: true
+      - method: GET
+        path: /api/Libro/{id}/libros
+        description: Get books by category ID
+        auth_required: false
+      - method: DELETE
+        path: /api/Libro/{id}
+        description: Delete book with cascade
+        auth_required: false
+    depends_on:
+      - Authentication & User Management
+      - Categories
+  - name: EPUB Reader Engine
+    description: Serve EPUB manifest and resources for the mobile reader
+    files:
+      - Controllers/EpubController.cs
+      - Services/EpubService.cs
+      - Services/Interfaces/IEpubService.cs
+    endpoints:
+      - method: GET
+        path: /api/epub/{libroId}/manifest
+        description: Get EPUB manifest - title, author, reading order, resources, TOC
+        auth_required: false
+        response_schema:
+          "200": "BookManifestDto"
+      - method: GET
+        path: /api/epub/{libroId}/resource
+        description: Serve individual EPUB resource (chapter HTML, image, CSS) with correct MIME type
+        auth_required: false
+        response_schema:
+          "200": Binary file content with MIME type
+          "404": Resource not found
+    depends_on:
+      - Book Catalog
+  - name: User Library
+    description: Personal library management with reading progress tracking and favorites
+    files:
+      - Controllers/UsuarioLibroController.cs
+      - Services/UsuarioLibroService.cs
+      - Entities/UsuarioLibro.cs
+    endpoints:
+      - method: GET
+        path: /api/UsuarioLibro/biblioteca
+        description: Get authenticated user's personal library (sorted by last-read then date added)
+        auth_required: true
+        response_schema:
+          "200": "UsuarioLibroDto[]"
+      - method: POST
+        path: /api/UsuarioLibro/{libroId}
+        description: Add book to user's library
+        auth_required: true
+        response_schema:
+          "200": Success
+          "400": Already in library
+      - method: DELETE
+        path: /api/UsuarioLibro/{libroId}
+        description: Remove book from user's library
+        auth_required: true
+      - method: PATCH
+        path: /api/UsuarioLibro/progreso
+        description: Update reading progress (progreso %, paginaActual, UltimaLectura)
+        auth_required: true
+        request_schema:
+          body:
+            LibroId: int
+            Progreso: double
+            PaginaActual: int
+      - method: PATCH
+        path: /api/UsuarioLibro/favorito/{libroId}
+        description: Toggle favorite status
+        auth_required: true
+    depends_on:
+      - Authentication & User Management
+      - Book Catalog
+  - name: Bookmarks
+    description: Create, list, update, and delete page bookmarks per user per book
+    files:
+      - Controllers/MarcadoresController.cs
+      - Services/MarcadorService.cs
+      - Entities/Marcador.cs
+    endpoints:
+      - method: POST
+        path: /api/Marcadores
+        description: Create bookmark at specific page
+        auth_required: true
+        request_schema:
+          body:
+            LibroId: int
+            Pagina: int
+      - method: GET
+        path: /api/Marcadores/usuario
+        description: Get all bookmarks for authenticated user
+        auth_required: true
+      - method: GET
+        path: /api/Marcadores/libro/{libroId}
+        description: Get bookmarks for a specific book
+        auth_required: true
+      - method: PUT
+        path: /api/Marcadores/{id}
+        description: Update bookmark page number (owner only)
+        auth_required: true
+      - method: DELETE
+        path: /api/Marcadores/{id}
+        description: Delete bookmark (owner only)
+        auth_required: true
+    depends_on:
+      - Authentication & User Management
+      - Book Catalog
+  - name: Highlights (Resaltadores)
+    description: Create, list, update, and delete text highlights with CFI ranges and colors
+    files:
+      - Controllers/ResaltadoresController.cs
+      - Services/ResaltadorService.cs
+      - Entities/Resaltador.cs
+    endpoints:
+      - method: POST
+        path: /api/Resaltadores
+        description: Create highlight with CFI range, href and color
+        auth_required: true
+        request_schema:
+          body:
+            LibroId: int
+            Href: string
+            CfiRange: string
+            Color: string
+      - method: GET
+        path: /api/Resaltadores/usuario
+        description: Get all highlights for user
+        auth_required: true
+      - method: GET
+        path: /api/Resaltadores/libro/{libroId}
+        description: Get highlights for a specific book
+        auth_required: true
+      - method: PUT
+        path: /api/Resaltadores/{id}
+        description: Update highlight (CFI range and color, owner only)
+        auth_required: true
+      - method: DELETE
+        path: /api/Resaltadores/{id}
+        description: Delete highlight (owner only)
+        auth_required: true
+    depends_on:
+      - Authentication & User Management
+      - Book Catalog
+  - name: Ratings (Valoraciones)
+    description: Rate books on 1-5 scale with unique constraint per user per book and top 5 ranking
+    files:
+      - Controllers/ValoracionesController.cs
+      - Services/ValoracionService.cs
+      - Entities/Valoracion.cs
+    endpoints:
+      - method: POST
+        path: /api/Valoraciones
+        description: Create rating (1-5) for a book. One rating per user per book
+        auth_required: true
+        request_schema:
+          body:
+            LibroId: int
+            Puntuacion: int
+      - method: PUT
+        path: /api/Valoraciones/{libroId}
+        description: Update existing rating
+        auth_required: true
+      - method: DELETE
+        path: /api/Valoraciones/{libroId}
+        description: Delete rating
+        auth_required: true
+      - method: GET
+        path: /api/Valoraciones/libro/{libroId}
+        description: Get all ratings for a book
+        auth_required: false
+      - method: GET
+        path: /api/Valoraciones/top5
+        description: Get top 5 books by average rating
+        auth_required: false
+        response_schema:
+          "200": "Top5ValoracionDto[]"
+    depends_on:
+      - Authentication & User Management
+      - Book Catalog
+  - name: Reviews (Reseñas)
+    description: Create, edit, delete text reviews for books
+    files:
+      - Controllers/ResenaController.cs
+      - Services/ResenaService.cs
+      - Entities/Resena.cs
+    endpoints:
+      - method: POST
+        path: /api/Resena
+        description: Create a text review for a book
+        auth_required: true
+        request_schema:
+          body:
+            LibroId: int
+            Texto: string
+      - method: PUT
+        path: /api/Resena/{id}
+        description: Update own review (owner only)
+        auth_required: true
+      - method: DELETE
+        path: /api/Resena/{id}
+        description: Delete own review (owner only)
+        auth_required: true
+      - method: GET
+        path: /api/Resena/libro/{libroId}
+        description: Get all reviews for a book, ordered by date desc
+        auth_required: false
+    depends_on:
+      - Authentication & User Management
+      - Book Catalog
+  - name: Categories
+    description: CRUD operations for book categories
+    files:
+      - Controllers/CategoriasController.cs
+      - Services/CategoriaService.cs
+      - Entities/Categoria.cs
+    endpoints:
+      - method: GET
+        path: /api/Categorias
+        description: List categories (paged) with book count
+        auth_required: false
+      - method: GET
+        path: /api/Categorias/{id}
+        description: Get category by ID with total book count
+        auth_required: false
+      - method: POST
+        path: /api/Categorias
+        description: Create category
+        auth_required: false
+      - method: PATCH
+        path: /api/Categorias/{id}
+        description: Update category name
+        auth_required: false
+      - method: DELETE
+        path: /api/Categorias/{id}
+        description: Delete category
+        auth_required: false
+    depends_on: []
+  - name: User Suggestions
+    description: User feedback/suggestion submission and admin management
+    files:
+      - Controllers/SugerenciaController.cs
+      - Services/SugerenciaService.cs
+      - Entities/Sugerencia.cs
+    endpoints:
+      - method: POST
+        path: /api/Sugerencia
+        description: Submit a suggestion
+        auth_required: true
+      - method: GET
+        path: /api/Sugerencia
+        description: List suggestions (paged, admin only)
+        auth_required: true
+      - method: DELETE
+        path: /api/Sugerencia/{id}
+        description: Delete suggestion (admin only)
+        auth_required: true
+    depends_on:
+      - Authentication & User Management
+  - name: User Reports (Denuncias)
+    description: Report other users and admin management
+    files:
+      - Controllers/DenunciaController.cs
+      - Services/DenunciaService.cs
+      - Entities/Denuncia.cs
+    endpoints:
+      - method: POST
+        path: /api/Denuncia
+        description: Report another user (self-report blocked)
+        auth_required: true
+      - method: GET
+        path: /api/Denuncia
+        description: List reports (paged, admin only)
+        auth_required: true
+      - method: DELETE
+        path: /api/Denuncia/{id}
+        description: Delete report (admin only)
+        auth_required: true
+    depends_on:
+      - Authentication & User Management
+  - name: PDF to EPUB Conversion
+    description: Automatic conversion of uploaded PDF files to EPUB format
+    files:
+      - Infrastructure/Conversion/PdfToEpubConverter.cs
+      - Services/Interfaces/IPdfToEpubConverter.cs
+    endpoints: []
+    depends_on:
+      - Book Catalog
+known_limitations:
+  - issue: Some endpoints lack authorization (e.g., DELETE /api/Libro/{id}, POST /api/Categorias are public when they should be admin-only)
+    location: Controllers/LibroController.cs and Controllers/CategoriasController.cs
+    impact: Unauthorized users can delete books and create categories
+  - issue: AutoMapper package has a high severity vulnerability (GHSA-rvv3-g6hj-g44x)
+    location: OpenBooksBackMobile.csproj
+    impact: Potential security risk
+  - issue: Password reset is simulated (returns token directly instead of sending email)
+    location: Services/UsuarioService.cs
+    impact: Not production-ready for real email scenarios

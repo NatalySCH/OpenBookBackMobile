@@ -18,3 +18,4 @@ Migrations/*Snapshot.cs
 
 # Rider / JetBrains
 .idea/
+testsprite_tests\tmp\config.json
