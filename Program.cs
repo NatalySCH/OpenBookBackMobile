@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Ingresa el token JWT así: Bearer {token}"
+        Description = "Ingresa el token JWT asï¿½: Bearer {token}"
     });
 
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
@@ -113,6 +113,9 @@ if (app.Environment.IsDevelopment())
 }
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await context.Database.MigrateAsync();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
     string[] roles = { "Administrador", "Usuario" };
@@ -135,7 +138,7 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAdminAsync(userManager, roleManager);
 }
 app.UseStaticFiles();
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
